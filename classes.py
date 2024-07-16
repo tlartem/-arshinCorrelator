@@ -77,7 +77,7 @@ class Excel:
     def parse_journal(self):
         row = self.journal_first_row
         try:
-            while row < 200:
+            while row < 1000:
                 self.manometer_list.append(Manometer(
                     self.journal_com.Range(f'{self.journal_gos_letter}{row}').value,
                     self.journal_com.Range(f'{self.journal_number_letter}{row}').value,
@@ -88,12 +88,25 @@ class Excel:
             print(e)
 
     def associate(self):
-        for arshin_entry in self.arshin_list:
+        for i in range(len(self.arshin_list)):
+            arshin_entry = self.arshin_list[i]
             # Ищем соответствующий элемент в списке manometer_list
             for manometer in self.manometer_list:
                 if manometer.gos == arshin_entry.gos and manometer.number == arshin_entry.number:
                     # Переносим значение doc
                     manometer.doc = arshin_entry.doc
+                    del self.arshin_list[i]
+                else:
+                    try:
+                        if manometer.gos == arshin_entry.gos and str(int(manometer.number)).strip() == str(int(arshin_entry.number)).strip():
+                            # Переносим значение doc
+                            manometer.doc = arshin_entry.doc
+                            del self.arshin_list[i]
+                    except ValueError as e:
+                        pass
+        if self.arshin_list:
+            for entry in self.arshin_list:
+                print(f"Не найден в журнале: {entry.number}")
 
     def fill_doc(self):
         for manometer in self.manometer_list:
