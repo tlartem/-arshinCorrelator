@@ -88,22 +88,31 @@ class Excel:
             print(e)
 
     def associate(self):
-        for i in range(len(self.arshin_list)):
-            arshin_entry = self.arshin_list[i]
-            # Ищем соответствующий элемент в списке manometer_list
+        arshin_list_copy = self.arshin_list[:]
+
+        for arshin_entry in arshin_list_copy:
             for manometer in self.manometer_list:
-                if manometer.gos == arshin_entry.gos and manometer.number == arshin_entry.number:
-                    # Переносим значение doc
+                manometer_number = manometer.number
+                arshin_number = arshin_entry.number
+
+                # Преобразуем номера в строки без пробелов
+                manometer_number_str = str(manometer_number).strip()
+                arshin_number_str = str(arshin_number).strip()
+
+                # Если оба номера числовые, приводим их к int и сравниваем
+                try:
+                    if float(manometer_number) == float(arshin_number):
+                        manometer_number_str = str(int(float(manometer_number)))
+                        arshin_number_str = str(int(float(arshin_number)))
+                except ValueError:
+                    # Один из номеров не числовой, продолжаем обычное сравнение строк
+                    pass
+
+                if manometer.gos == arshin_entry.gos and manometer_number_str == arshin_number_str:
                     manometer.doc = arshin_entry.doc
-                    del self.arshin_list[i]
-                else:
-                    try:
-                        if manometer.gos == arshin_entry.gos and str(int(manometer.number)).strip() == str(int(arshin_entry.number)).strip():
-                            # Переносим значение doc
-                            manometer.doc = arshin_entry.doc
-                            del self.arshin_list[i]
-                    except ValueError as e:
-                        pass
+                    self.arshin_list.remove(arshin_entry)
+                    break
+
         if self.arshin_list:
             for entry in self.arshin_list:
                 print(f"Не найден в журнале: {entry.number}")
