@@ -9,24 +9,28 @@ arshin_list = []
 manometer_list = []
 
 
-
-def choose_file(path_var, file_label):
-    path_var = filedialog.askopenfilename(title="Выберите файл",
+def choose_arshin():
+    global ARSHIN_PATH
+    ARSHIN_PATH = filedialog.askopenfilename(title="Выберите файл",
                                           filetypes=[("Excel files", "*.xlsx")])
-    if path_var:
+    if ARSHIN_PATH:
         # Ограничим длину отображаемого имени файла
-        display_name = os.path.basename(path_var)
+        display_name = os.path.basename(ARSHIN_PATH)
         if len(display_name) > 30:
             display_name = display_name[:27] + '...'
-        file_label.config(text=f"Файл: {display_name}", foreground='green')
-
-
-def choose_arshin():
-    choose_file(ARSHIN_PATH, arshin_label)
+        arshin_label.config(text=f"Файл: {display_name}", foreground='green')
 
 
 def choose_journal():
-    choose_file(JOURNAL_PATH, journal_label)
+    global JOURNAL_PATH
+    JOURNAL_PATH = filedialog.askopenfilename(title="Выберите файл",
+                                          filetypes=[("Excel files", "*.xlsx")])
+    if JOURNAL_PATH:
+        # Ограничим длину отображаемого имени файла
+        display_name = os.path.basename(JOURNAL_PATH)
+        if len(display_name) > 30:
+            display_name = display_name[:27] + '...'
+        journal_label.config(text=f"Файл: {display_name}", foreground='green')
 
 
 font_default = ("Tahoma", 10)
@@ -37,10 +41,24 @@ win.geometry('400x500')
 win.resizable(False, False)
 win.option_add("*Font", font_default)
 
+
 def do():
     xl = cl.Excel(ARSHIN_PATH, JOURNAL_PATH,
-                  4,  'E', 'G', 'K',
+                  int(arshin_first_row_entry.get()),
+                  arshin_gos_letter_entry.get(),
+                  arshin_number_letter_entry.get(),
+                  arshin_doc_letter_entry.get(),
+                  int(journal_first_row_entry.get()),
+                  journal_gos_letter_entry.get(),
+                  journal_number_letter_entry.get(),
+                  journal_doc_letter_entry.get(),
+                  True
                   )
+    xl.parse_arshin()
+    xl.parse_journal()
+    xl.associate()
+    xl.fill_doc()
+
 
 main_frame = tk.Frame(win)
 main_frame.pack(pady=20)
@@ -70,8 +88,8 @@ journal_first_row_entry.grid(row=4, column=2, pady=5, columnspan=1)
 gos_letter_lb = tk.Label(main_frame, text="Буква ГРСИ(аршин/журнал):")
 gos_letter_lb.grid(row=5, column=0, pady=5, columnspan=1)
 
-arshin_journal_gos_letter_entry = tk.Entry(main_frame, width=5, justify='center')
-arshin_journal_gos_letter_entry.grid(row=5, column=1, pady=5, columnspan=1)
+arshin_gos_letter_entry = tk.Entry(main_frame, width=5, justify='center')
+arshin_gos_letter_entry.grid(row=5, column=1, pady=5, columnspan=1)
 
 journal_gos_letter_entry = tk.Entry(main_frame, width=5, justify='center')
 journal_gos_letter_entry.grid(row=5, column=2, pady=5, columnspan=1)
@@ -98,6 +116,5 @@ journal_doc_letter_entry.grid(row=7, column=2, pady=5, columnspan=1)
 
 do_btn = tk.Button(main_frame, text="Соотнести", command=do)
 do_btn.grid(row=8, column=0, pady=5, columnspan=2)
-
 
 win.mainloop()
