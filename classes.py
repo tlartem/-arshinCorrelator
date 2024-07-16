@@ -1,5 +1,5 @@
 import pythoncom
-import pywin32.client as win32
+import win32com.client as win32
 
 arshin_list = []
 manometer_list = []
@@ -27,6 +27,7 @@ class Manometer:
         self.gos = gos
         self.number = number
         self.row = row
+        self.doc = ''
 
 
 class Excel:
@@ -34,6 +35,8 @@ class Excel:
                  arshin_first_row, arshin_gos_letter, arshin_number_letter, arshin_doc_letter,
                  journal_first_row, journal_gos_letter, journal_number_letter, journal_doc_letter,
                  xl_visible=False):
+        self.arshin_list = []
+        self.manometer_list = []
         pythoncom.CoInitialize()
 
         xlApp = win32.Dispatch('Excel.Application')
@@ -62,7 +65,7 @@ class Excel:
         row = self.arshin_first_row
         try:
             while row < 200:
-                arshin_list.append(ArshinEntry(
+                self.arshin_list.append(ArshinEntry(
                     self.arshin_com.Range(f'{self.arshin_gos_letter}{row}').value,
                     self.arshin_com.Range(f'{self.arshin_number_letter}{row}').value,
                     self.arshin_com.Range(f'{self.arshin_doc_letter}{row}').value,
@@ -75,24 +78,24 @@ class Excel:
         row = self.journal_first_row
         try:
             while row < 200:
-                arshin_list.append(Manometer(
-                    self.arshin_com.Range(f'{self.journal_gos_letter}{row}').value,
-                    self.arshin_com.Range(f'{self.journal_number_letter}{row}').value,
+                self.manometer_list.append(Manometer(
+                    self.journal_com.Range(f'{self.journal_gos_letter}{row}').value,
+                    self.journal_com.Range(f'{self.journal_number_letter}{row}').value,
                     row
                 ))
                 row += 1
         except Exception as e:
             print(e)
 
-    @staticmethod
-    def associate():
-        for arshin_entry in arshin_list:
+    def associate(self):
+        for arshin_entry in self.arshin_list:
             # Ищем соответствующий элемент в списке manometer_list
-            for manometer in manometer_list:
+            for manometer in self.manometer_list:
                 if manometer.gos == arshin_entry.gos and manometer.number == arshin_entry.number:
                     # Переносим значение doc
                     manometer.doc = arshin_entry.doc
 
     def fill_doc(self):
-        for manometer in manometer_list:
-            self.journal_com.Range(f'{self.journal_doc_letter}{manometer.row}').value = f'{manometer.doc}'
+        for manometer in self.manometer_list:
+            if manometer.doc != '' and manometer.doc != None:
+                self.journal_com.Range(f'{self.journal_doc_letter}{manometer.row}').value = f'{manometer.doc}'
