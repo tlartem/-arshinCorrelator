@@ -1,3 +1,5 @@
+import random
+
 import pythoncom
 import win32com.client as win32
 
@@ -88,34 +90,40 @@ class Excel:
             print(e)
 
     def associate(self):
-        arshin_list_copy = self.arshin_list[:]
+        arshin_dict = {}
 
-        for arshin_entry in arshin_list_copy:
-            for manometer in self.manometer_list:
-                manometer_number = manometer.number
-                arshin_number = arshin_entry.number
+        # Создаем словарь, где ключами являются tuple (gos, number), а значениями - списки doc
+        for arshin_entry in self.arshin_list:
+            key = (arshin_entry.gos, arshin_entry.number)
+            if key not in arshin_dict:
+                arshin_dict[key] = []
+            arshin_dict[key].append(arshin_entry.doc)
 
-                # Преобразуем номера в строки без пробелов
-                manometer_number_str = str(manometer_number).strip()
-                arshin_number_str = str(arshin_number).strip()
+        # Присваиваем каждому манометру doc из списка doc для соответствующего ключа (gos, number)
+        for manometer in self.manometer_list:
+            key = (manometer.gos, manometer.number)
 
-                # Если оба номера числовые, приводим их к int и сравниваем
-                try:
-                    if float(manometer_number) == float(arshin_number):
-                        manometer_number_str = str(int(float(manometer_number)))
-                        arshin_number_str = str(int(float(arshin_number)))
-                except ValueError:
-                    # Один из номеров не числовой, продолжаем обычное сравнение строк
-                    pass
+            # Преобразуем номера в строки без пробелов
+            manometer_number_str = str(manometer.number).strip()
+            arshin_number_str = str(key[1]).strip()
 
-                if manometer.gos == arshin_entry.gos and manometer_number_str == arshin_number_str:
-                    manometer.doc = arshin_entry.doc
-                    self.arshin_list.remove(arshin_entry)
-                    break
+            # Если оба номера числовые, приводим их к int и сравниваем
+            try:
+                if float(manometer.number) == float(key[1]):
+                    manometer_number_str = str(int(float(manometer.number)))
+                    arshin_number_str = str(int(float(key[1])))
+            except ValueError:
+                # Один из номеров не числовой, продолжаем обычное сравнение строк
+                pass
 
-        if self.arshin_list:
-            for entry in self.arshin_list:
-                print(f"Не найден в журнале: {entry.number}")
+            if manometer.gos == key[0] and manometer_number_str == arshin_number_str:
+                if key in arshin_dict and arshin_dict[key]:
+                    manometer.doc = arshin_dict[key].pop(0)  # Берем первый доступный doc и удаляем его из списка
+
+        # Для вывода не найденных записей в журнале, если нужно
+        for key, docs in arshin_dict.items():
+            if docs:
+                print(f"Не найден в журнале: {key[1]}")
 
     def fill_doc(self):
         for manometer in self.manometer_list:
