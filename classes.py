@@ -17,6 +17,13 @@ class Cell:
         return f'{self.letter}{self.number}'
 
 
+def clearnumber(value):
+    try:
+        return str(int(value))
+    except Exception as e:
+        pass
+    return value
+
 class ArshinEntry:
     def __init__(self, gos, number, doc):
         self.gos = gos
@@ -69,7 +76,7 @@ class Excel:
             while row < 200:
                 self.arshin_list.append(ArshinEntry(
                     self.arshin_com.Range(f'{self.arshin_gos_letter}{row}').value,
-                    self.arshin_com.Range(f'{self.arshin_number_letter}{row}').value,
+                    clearnumber(self.arshin_com.Range(f'{self.arshin_number_letter}{row}').value),
                     self.arshin_com.Range(f'{self.arshin_doc_letter}{row}').value,
                 ))
                 row += 1
@@ -82,7 +89,7 @@ class Excel:
             while row < 1000:
                 self.manometer_list.append(Manometer(
                     self.journal_com.Range(f'{self.journal_gos_letter}{row}').value,
-                    self.journal_com.Range(f'{self.journal_number_letter}{row}').value,
+                    clearnumber(self.journal_com.Range(f'{self.journal_number_letter}{row}').value),
                     row
                 ))
                 row += 1
@@ -103,27 +110,13 @@ class Excel:
         for manometer in self.manometer_list:
             key = (manometer.gos, manometer.number)
 
-            # Преобразуем номера в строки без пробелов
-            manometer_number_str = str(manometer.number).strip()
-            arshin_number_str = str(key[1]).strip()
-
-            # Если оба номера числовые, приводим их к int и сравниваем
-            try:
-                if float(manometer.number) == float(key[1]):
-                    manometer_number_str = str(int(float(manometer.number)))
-                    arshin_number_str = str(int(float(key[1])))
-            except ValueError:
-                # Один из номеров не числовой, продолжаем обычное сравнение строк
-                pass
-
-            if manometer.gos == key[0] and manometer_number_str == arshin_number_str:
-                if key in arshin_dict and arshin_dict[key]:
-                    manometer.doc = arshin_dict[key].pop(0)  # Берем первый доступный doc и удаляем его из списка
+            if key in arshin_dict and arshin_dict[key]:
+                manometer.doc = arshin_dict[key].pop(0)  # Берем первый доступный doc и удаляем его из списка
 
         # Для вывода не найденных записей в журнале, если нужно
         for key, docs in arshin_dict.items():
             if docs:
-                print(f"Не найден в журнале: {key[1]}")
+                print(f"Не найден в журнале: {key[1]} (дубликаты)")
 
     def fill_doc(self):
         for manometer in self.manometer_list:
