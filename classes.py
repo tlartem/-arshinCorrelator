@@ -25,10 +25,11 @@ def clearnumber(value):
     return value
 
 class ArshinEntry:
-    def __init__(self, gos, number, doc):
+    def __init__(self, gos, number, doc, row_data):
         self.gos = gos
         self.number = number
         self.doc = doc
+        self.row_data = row_data  # Поле для хранения всей строки
 
 
 class Manometer:
@@ -74,10 +75,12 @@ class Excel:
         row = self.arshin_first_row
         try:
             while row < 500:
+                row_data = self.arshin_com.Range(f'{self.arshin_gos_letter}{row}:{self.arshin_doc_letter}{row}').Value
                 self.arshin_list.append(ArshinEntry(
                     self.arshin_com.Range(f'{self.arshin_gos_letter}{row}').value,
                     clearnumber(self.arshin_com.Range(f'{self.arshin_number_letter}{row}').value),
                     self.arshin_com.Range(f'{self.arshin_doc_letter}{row}').value,
+                    row_data  # Сохранение строки данных
                 ))
                 row += 1
         except Exception as e:
@@ -103,13 +106,13 @@ class Excel:
             key = (arshin_entry.gos, arshin_entry.number)
             if key not in arshin_dict:
                 arshin_dict[key] = []
-            arshin_dict[key].append(arshin_entry.doc)
+            arshin_dict[key].append((arshin_entry.doc, arshin_entry.row_data))
 
         for manometer in self.manometer_list:
             key = (manometer.gos, manometer.number)
 
             if key in arshin_dict and arshin_dict[key]:
-                manometer.doc = arshin_dict[key].pop(0)
+                manometer.doc, row_data = arshin_dict[key].pop(0)
                 self.counter += 1
             else:
                 self.not_found_in_arshin += 1
@@ -117,7 +120,8 @@ class Excel:
         for key, docs in arshin_dict.items():
             if docs:
                 self.not_found_in_journal += len(docs)
-                print(f"Не найден в журнале: {key[1]}")
+                for doc, row_data in docs:
+                    print(f"Не найден в журнале: {key[1]} | Строка данных: {row_data}")
 
         total_arshin_entries = len(self.arshin_list)
         total_journal_entries = len(self.manometer_list)
