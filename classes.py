@@ -48,6 +48,8 @@ class Excel:
         self.manometer_list = []
         pythoncom.CoInitialize()
         self.counter = 0
+        self.not_found_in_journal = 0
+        self.not_found_in_arshin = 0
 
         xlApp = win32.Dispatch('Excel.Application')
         xlApp.Visible = xl_visible
@@ -67,9 +69,6 @@ class Excel:
         self.journal_gos_letter = journal_gos_letter
         self.journal_number_letter = journal_number_letter
         self.journal_doc_letter = journal_doc_letter
-
-        # self.xlApp = xlApp
-        # self.wb = Protocol
 
     def parse_arshin(self):
         row = self.arshin_first_row
@@ -100,25 +99,38 @@ class Excel:
     def associate(self):
         arshin_dict = {}
 
-        # Создаем словарь, где ключами являются tuple (gos, number), а значениями - списки doc
         for arshin_entry in self.arshin_list:
             key = (arshin_entry.gos, arshin_entry.number)
             if key not in arshin_dict:
                 arshin_dict[key] = []
             arshin_dict[key].append(arshin_entry.doc)
 
-        # Присваиваем каждому манометру doc из списка doc для соответствующего ключа (gos, number)
         for manometer in self.manometer_list:
             key = (manometer.gos, manometer.number)
 
             if key in arshin_dict and arshin_dict[key]:
-                manometer.doc = arshin_dict[key].pop(0)  # Берем первый доступный doc и удаляем его из списка
+                manometer.doc = arshin_dict[key].pop(0)
                 self.counter += 1
+            else:
+                self.not_found_in_arshin += 1
 
-        # Для вывода не найденных записей в журнале, если нужно
         for key, docs in arshin_dict.items():
             if docs:
+                self.not_found_in_journal += len(docs)
                 print(f"Не найден в журнале: {key[1]}")
+
+        total_arshin_entries = len(self.arshin_list)
+        total_journal_entries = len(self.manometer_list)
+        found_in_journal = self.counter
+        not_found_in_journal = self.not_found_in_journal
+        not_found_in_arshin = self.not_found_in_arshin
+
+        print(f"Общее количество записей в Аршине: {total_arshin_entries}")
+        print(f"Общее количество записей в Журнале: {total_journal_entries}")
+        print(f"Количество найденных совпадений: {found_in_journal}")
+        print(f"Количество записей, не найденных в Журнале: {not_found_in_journal}")
+        print(f"Количество записей в Журнале, не найденных в Аршине: {not_found_in_arshin}")
+
         return self.counter
 
     def fill_doc(self):
