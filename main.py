@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import filedialog
 import os
 import classes as cl
+from gui_logger import initialize_console_logger
 
 ARSHIN_PATH = None
 JOURNAL_PATH = None
@@ -12,7 +13,7 @@ manometer_list = []
 def choose_arshin():
     global ARSHIN_PATH
     ARSHIN_PATH = filedialog.askopenfilename(title="Выберите файл",
-                                          filetypes=[("Excel files", "*.xlsx")])
+                                             filetypes=[("Excel files", "*.xlsx")])
     if ARSHIN_PATH:
         # Ограничим длину отображаемого имени файла
         display_name = os.path.basename(ARSHIN_PATH)
@@ -24,7 +25,7 @@ def choose_arshin():
 def choose_journal():
     global JOURNAL_PATH
     JOURNAL_PATH = filedialog.askopenfilename(title="Выберите файл",
-                                          filetypes=[("Excel files", "*.xlsx")])
+                                              filetypes=[("Excel files", "*.xlsx")])
     if JOURNAL_PATH:
         # Ограничим длину отображаемого имени файла
         display_name = os.path.basename(JOURNAL_PATH)
@@ -40,6 +41,22 @@ win.title('ArshinCorrelator')
 win.geometry('400x500')
 win.resizable(False, False)
 win.option_add("*Font", font_default)
+
+# Добавляем меню
+win.menu = tk.Menu(win)
+win.config(menu=win.menu)
+
+win.options_menu = tk.Menu(win.menu, tearoff=0)
+win.menu.add_cascade(label="Опции", menu=win.options_menu)
+
+
+def show_console(*args):
+    win.console_logger.show_console()
+
+
+# Инициализация консольного логгера
+win.console_logger = initialize_console_logger(win, show_console)
+win.options_menu.add_command(label='Показать лог', command=win.console_logger.show_console)
 
 
 def do():
