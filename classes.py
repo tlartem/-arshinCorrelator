@@ -74,14 +74,17 @@ class Excel:
     def parse_arshin(self):
         row = self.arshin_first_row
         try:
-            while row < 500:
+            while True:
+                gos = self.arshin_com.Range(f'{self.arshin_gos_letter}{row}').value
+                number = self.arshin_com.Range(f'{self.arshin_number_letter}{row}').value
+                doc = self.arshin_com.Range(f'{self.arshin_doc_letter}{row}').value
+
+                if not gos and not number and not doc:
+                    print(f"Парсинг аршина остановлен на строке {row}")
+                    break
+
                 row_data = self.arshin_com.Range(f'{self.arshin_gos_letter}{row}:{self.arshin_doc_letter}{row}').Value
-                self.arshin_list.append(ArshinEntry(
-                    self.arshin_com.Range(f'{self.arshin_gos_letter}{row}').value,
-                    clearnumber(self.arshin_com.Range(f'{self.arshin_number_letter}{row}').value),
-                    self.arshin_com.Range(f'{self.arshin_doc_letter}{row}').value,
-                    row_data  # Сохранение строки данных
-                ))
+                self.arshin_list.append(ArshinEntry(gos, clearnumber(number), doc, row_data))
                 row += 1
         except Exception as e:
             print(e)
@@ -89,12 +92,15 @@ class Excel:
     def parse_journal(self):
         row = self.journal_first_row
         try:
-            while row < 2000:
-                self.manometer_list.append(Manometer(
-                    self.journal_com.Range(f'{self.journal_gos_letter}{row}').value,
-                    clearnumber(self.journal_com.Range(f'{self.journal_number_letter}{row}').value),
-                    row
-                ))
+            while True:
+                gos = self.journal_com.Range(f'{self.journal_gos_letter}{row}').value
+                number = self.journal_com.Range(f'{self.journal_number_letter}{row}').value
+
+                if not gos and not number:
+                    print(f"Парсинг журнала остановлен на строке {row}")
+                    break
+
+                self.manometer_list.append(Manometer(gos, clearnumber(number), row))
                 row += 1
         except Exception as e:
             print(e)
@@ -139,5 +145,5 @@ class Excel:
 
     def fill_doc(self):
         for manometer in self.manometer_list:
-            if manometer.doc != '' and manometer.doc != None:
+            if manometer.doc != '' and manometer.doc is not None:
                 self.journal_com.Range(f'{self.journal_doc_letter}{manometer.row}').value = f'{manometer.doc}'

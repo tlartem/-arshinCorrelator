@@ -73,6 +73,7 @@ def show_console(*args):
 
 
 def do():
+    win.console_logger.clear_console()
     xl = cl.Excel(ARSHIN_PATH, JOURNAL_PATH,
                   int(arshin_first_row_entry.get()),
                   arshin_gos_letter_entry.get(),

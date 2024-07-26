@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import scrolledtext
+from tkinter import scrolledtext, messagebox, ttk
 import sys
 
 
@@ -22,36 +22,54 @@ class TextRedirector:
 
 
 class ConsoleLoggerApp:
-    def __init__(self, root, update_status_callback=None):
-        self.console_window = tk.Toplevel(root)
-        self.console_window.title("Console")
-        self.console_window.iconbitmap('_internal\\icon.ico')
-        self.console_window.geometry("600x400")
-        self.console_window.withdraw()  # Скрываем консольное окно при запуске
-        self.console_window.protocol("WM_DELETE_WINDOW", self.hide_console)  # Обработка закрытия окна
+    def __init__(self, parent, update_status_callback=None):
+        self.console_frame = ttk.Frame(parent)
+        self.console_frame.pack(fill=tk.BOTH, expand=True)
 
-        self.textbox = scrolledtext.ScrolledText(self.console_window, wrap=tk.WORD)
-        self.textbox.pack(expand=True, fill='both')
-        self.textbox.configure(state='disabled')  # Делаем TextBox только для чтения
+        self.textbox = scrolledtext.ScrolledText(self.console_frame, wrap=tk.WORD, state='disabled')
+        self.textbox.pack(expand=True, fill='both', padx=10, pady=10)
 
         self.stdout_redirector = TextRedirector(self.textbox, update_status_callback, 'stdout')
         self.stderr_redirector = TextRedirector(self.textbox, update_status_callback, 'stderr')
         sys.stdout = self.stdout_redirector
         sys.stderr = self.stderr_redirector
 
+        # Добавляем кнопки управления
+        self.button_frame = ttk.Frame(self.console_frame)
+        self.button_frame.pack(fill=tk.X, pady=5, padx=10)
+
+        self.clear_button = ttk.Button(self.button_frame, text="Очистить", command=self.clear_console)
+        self.clear_button.pack(side=tk.LEFT, padx=5)
+
+        self.copy_button = ttk.Button(self.button_frame, text="Копировать", command=self.copy_to_clipboard)
+        self.copy_button.pack(side=tk.LEFT, padx=5)
+
     def show_console(self):
-        self.console_window.deiconify()
-        self.console_window.lift()
+        self.console_frame.pack(fill=tk.BOTH, expand=True)
+        self.console_frame.lift()
 
     def hide_console(self):
-        self.console_window.withdraw()
+        self.console_frame.pack_forget()
+
+    def clear_console(self):
+        self.textbox.configure(state='normal')
+        self.textbox.delete('1.0', tk.END)
+        self.textbox.configure(state='disabled')
+
+    def copy_to_clipboard(self):
+        self.console_frame.clipboard_clear()
+        self.console_frame.clipboard_append(self.textbox.get('1.0', tk.END))
+        messagebox.showinfo("Копировать", "Содержимое консоли скопировано в буфер обмена")
+
+    def write_message(self, message):
+        self.stdout_redirector.write(message)
 
 
 _console_logger_app_instance = None
 
 
-def initialize_console_logger(root, update_status_callback=None):
+def initialize_console_logger(parent, update_status_callback=None):
     global _console_logger_app_instance
     if _console_logger_app_instance is None:
-        _console_logger_app_instance = ConsoleLoggerApp(root, update_status_callback)
+        _console_logger_app_instance = ConsoleLoggerApp(parent, update_status_callback)
     return _console_logger_app_instance
