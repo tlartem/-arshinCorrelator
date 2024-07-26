@@ -47,6 +47,7 @@ class Excel:
         self.arshin_list = []
         self.manometer_list = []
         pythoncom.CoInitialize()
+        self.counter = 0
 
         xlApp = win32.Dispatch('Excel.Application')
         xlApp.Visible = xl_visible
@@ -73,7 +74,7 @@ class Excel:
     def parse_arshin(self):
         row = self.arshin_first_row
         try:
-            while row < 200:
+            while row < 500:
                 self.arshin_list.append(ArshinEntry(
                     self.arshin_com.Range(f'{self.arshin_gos_letter}{row}').value,
                     clearnumber(self.arshin_com.Range(f'{self.arshin_number_letter}{row}').value),
@@ -86,7 +87,7 @@ class Excel:
     def parse_journal(self):
         row = self.journal_first_row
         try:
-            while row < 1000:
+            while row < 2000:
                 self.manometer_list.append(Manometer(
                     self.journal_com.Range(f'{self.journal_gos_letter}{row}').value,
                     clearnumber(self.journal_com.Range(f'{self.journal_number_letter}{row}').value),
@@ -112,11 +113,13 @@ class Excel:
 
             if key in arshin_dict and arshin_dict[key]:
                 manometer.doc = arshin_dict[key].pop(0)  # Берем первый доступный doc и удаляем его из списка
+                self.counter += 1
 
         # Для вывода не найденных записей в журнале, если нужно
         for key, docs in arshin_dict.items():
             if docs:
-                print(f"Не найден в журнале: {key[1]} (дубликаты)")
+                print(f"Не найден в журнале: {key[1]}")
+        return self.counter
 
     def fill_doc(self):
         for manometer in self.manometer_list:

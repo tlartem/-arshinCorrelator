@@ -25,7 +25,7 @@ class ConsoleLoggerApp:
     def __init__(self, root, update_status_callback=None):
         self.console_window = tk.Toplevel(root)
         self.console_window.title("Console")
-        # self.console_window.iconbitmap('_internal\\icon.ico')
+        self.console_window.iconbitmap('_internal\\icon.ico')
         self.console_window.geometry("600x400")
         self.console_window.withdraw()  # Скрываем консольное окно при запуске
         self.console_window.protocol("WM_DELETE_WINDOW", self.hide_console)  # Обработка закрытия окна

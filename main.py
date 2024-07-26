@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 from tkinter import ttk
 import os
 import json
@@ -86,15 +86,18 @@ def do():
                   )
     xl.parse_arshin()
     xl.parse_journal()
-    xl.associate()
+    counter = xl.associate()
     xl.fill_doc()
+    messagebox.showinfo(f'Соотнесено {counter}шт.')
 
 
 win = tk.Tk()
 win.title('ArshinCorrelator')
 win.geometry('400x500')
 win.resizable(False, False)
-win.option_add("*Font", ("Tahoma", 10))
+win.option_add("*Font", ("Tahoma", 12))
+sv_ttk.set_theme("light")
+win.iconbitmap('_internal\\icon.ico')
 
 # Инициализация консольного логгера
 win.console_logger = initialize_console_logger(win, show_console)
