@@ -1,5 +1,3 @@
-import random
-
 import pythoncom
 import win32com.client as win32
 
@@ -24,6 +22,7 @@ def clearnumber(value):
         pass
     return value
 
+
 class ArshinEntry:
     def __init__(self, gos, number, doc, row_data):
         self.gos = gos
@@ -38,12 +37,14 @@ class Manometer:
         self.number = number
         self.row = row
         self.doc = ''
+        self.additional_doc = ''  # Новое поле
 
 
 class Excel:
     def __init__(self, arshin_path, journal_path,
                  arshin_first_row, arshin_gos_letter, arshin_number_letter, arshin_doc_letter,
                  journal_first_row, journal_gos_letter, journal_number_letter, journal_doc_letter,
+                 journal_additional_letter,
                  xl_visible=False):
         self.arshin_list = []
         self.manometer_list = []
@@ -70,6 +71,7 @@ class Excel:
         self.journal_gos_letter = journal_gos_letter
         self.journal_number_letter = journal_number_letter
         self.journal_doc_letter = journal_doc_letter
+        self.journal_additional_letter = journal_additional_letter
 
     def parse_arshin(self):
         row = self.arshin_first_row
@@ -95,12 +97,15 @@ class Excel:
             while True:
                 gos = self.journal_com.Range(f'{self.journal_gos_letter}{row}').value
                 number = self.journal_com.Range(f'{self.journal_number_letter}{row}').value
+                additional_doc = self.journal_com.Range(f'{self.journal_additional_letter}{row}').value
 
                 if not gos and not number:
                     print(f"Парсинг журнала остановлен на строке {row}")
                     break
 
-                self.manometer_list.append(Manometer(gos, clearnumber(number), row))
+                manometer = Manometer(gos, clearnumber(number), row)
+                manometer.additional_doc = additional_doc  # Сохранение дополнительной буквы
+                self.manometer_list.append(manometer)
                 row += 1
         except Exception as e:
             print(e)
@@ -146,4 +151,9 @@ class Excel:
     def fill_doc(self):
         for manometer in self.manometer_list:
             if manometer.doc != '' and manometer.doc is not None:
-                self.journal_com.Range(f'{self.journal_doc_letter}{manometer.row}').value = f'{manometer.doc}'
+                current_value = self.journal_com.Range(f'{self.journal_doc_letter}{manometer.row}').value
+                if not current_value:
+                    self.journal_com.Range(f'{self.journal_doc_letter}{manometer.row}').value = f'{manometer.doc}'
+                else:
+                    print(
+                        f'Манометр с ГОС: {manometer.gos}, номером: {manometer.number} уже имеет документ: {current_value}')
